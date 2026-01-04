@@ -32,9 +32,7 @@
     header h1 { font-size: 2rem; }
     header p { color: var(--muted); }
 
-    .search {
-      margin-top: 10px;
-    }
+    .search { margin-top: 10px; }
 
     .search input {
       width: 100%;
@@ -95,18 +93,31 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      background: #111827;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: #e5e7eb;
     }
 
     .actions button {
       background: var(--accent);
       border: none;
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
     }
 
-    .actions button:hover { filter: brightness(0.9); }
+    .actions button:active {
+      transform: scale(0.96);
+      filter: brightness(0.85);
+    }
 
     footer {
       margin-top: 40px;
@@ -128,12 +139,51 @@
 
   <section class="apps" id="apps"></section>
 
+  <div id="iosHint" style="display:none; margin-top:20px; padding:14px; background:#111827; border-radius:12px; color:#e5e7eb; font-size:0.95rem;">
+    📱 <strong>iPhone/iPad:</strong> ao tocar em <em>Download</em> de um PDF, ele abrirá na tela. Depois toque em <strong>Compartilhar ⬆️ → Salvar em Arquivos</strong>.
+  </div>
+
   <footer>
     <p>Uso interno • Não distribuir</p>
   </footer>
 
   <script>
+    // Detecta iOS ANTES de qualquer uso
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     const apps = [
+      {
+        name: "Controle da TV",
+        version: "v1.2",
+        desc: "Aplicativo para controlar a TV da sala pelo celular.",
+        icon: "📺",
+        link: "downloads/controle-tv.apk",
+        type: "APK"
+      },
+      {
+        name: "Internet da Casa",
+        version: "v2.0",
+        desc: "Ferramenta para reiniciar o roteador e verificar a rede.",
+        icon: "🌐",
+        link: "downloads/internet-casa.apk",
+        type: "APK"
+      },
+      {
+        name: "Manual da Smart TV",
+        version: "PDF",
+        desc: "Manual oficial da TV da sala em PDF.",
+        icon: "📄",
+        link: "downloads/manual-tv.pdf",
+        type: "PDF"
+      },
+      {
+        name: "Backup Familiar",
+        version: "v1.0",
+        desc: "Backup de fotos e documentos da família.",
+        icon: "💾",
+        link: "downloads/backup.zip",
+        type: "ZIP"
+      },
       {
         name: "Etiquetas 1",
         version: "PDF",
@@ -158,27 +208,38 @@
         link: "downloads/etiquetas-2026 (2).pdf",
         type: "PDF"
       }
-      /*{
-        name: "Backup Familiar",
-        version: "v1.0",
-        desc: "Backup de fotos e documentos da família.",
-        icon: "💾",
-        link: "downloads/backup.zip",
-        type: "ZIP"
-      }*/
     ];
 
     const container = document.getElementById('apps');
     const search = document.getElementById('search');
 
+    function getButtonLabel(type) {
+      if (isIOS && type === 'PDF') return 'Abrir';
+      if (isIOS && type === 'APK') return 'Não compatível';
+      return 'Download';
+    }
+
+    function handleDownload(link, type) {
+      if (isIOS && type === 'APK') {
+        alert('Este tipo de arquivo não é compatível com iOS.');
+        return;
+      }
+      window.location.href = link;
+    }
+
+    function getIcon(app) {
+      const map = { PDF: '📄', APK: '🤖', ZIP: '🗜️', EXE: '💻', MP3: '🎵', MP4: '🎬' };
+      return map[app.type] || app.icon;
+    }
+
     function render(list) {
-      container.innerHTML = "";
+      container.innerHTML = '';
       list.forEach(app => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="card-header">
-            <div class="icon">${app.icon}</div>
+            <div class="icon">${getIcon(app)}</div>
             <div class="info">
               <h3>${app.name}</h3>
               <span>${app.version}</span>
@@ -187,7 +248,7 @@
           <p class="description">${app.desc}</p>
           <div class="actions">
             <span class="badge">${app.type}</span>
-            <button onclick=\"window.location.href='${app.link}'\">Download</button>
+            <button onclick="handleDownload('${app.link}','${app.type}')">${getButtonLabel(app.type)}</button>
           </div>
         `;
         container.appendChild(card);
@@ -196,12 +257,16 @@
 
     search.addEventListener('input', () => {
       const value = search.value.toLowerCase();
-      const filtered = apps.filter(a => a.name.toLowerCase().includes(value));
-      render(filtered);
+      render(apps.filter(a => a.name.toLowerCase().includes(value)));
     });
 
     render(apps);
+
+    if (isIOS) {
+      document.getElementById('iosHint').style.display = 'block';
+    }
   </script>
 
 </body>
 </html>
+     
